@@ -1,57 +1,54 @@
 #include "FastLED.h"
 
 // How many leds in your strip?
-#define NUM_LEDS 3
+#define NUM_LEDS 15
 
 // For led chips like Neopixels, which have a data line, ground, and power, you just
 // need to define DATA_PIN.  For led chipsets that are SPI based (four wires - data, clock,
 // ground, and power), like the LPD8806 define both DATA_PIN and CLOCK_PIN
 #define DATA_PIN 3
 
-const int ledNumber = 3;
-const int channel = 3;
-int ledStates[ledNumber][channel];
-int brightnessArray[ledNumber][channel];
-int loopIterator = 255;
-int loopDuration = 2;
+int ledArray[NUM_LEDS];
+int activeLed = 1;
 
 // Define the array of leds
 CRGB leds[NUM_LEDS];
 
+
+
 void setup() {
-    FastLED.addLeds<WS2811, DATA_PIN, RGB>(leds, NUM_LEDS);
-   // LEDS.setBrightness(254);
-   setRandomBrightness();
+	FastLED.addLeds<WS2811, DATA_PIN, RGB>(leds, NUM_LEDS);
+	LEDS.setBrightness(255);
 }
 
 void loop() {
-    for (int i = 0; i < ledNumber; i++) {
-      for (int j = 0; j < channel; j++) {
-            if(brightnessArray[i][j] - loopIterator > 0){
-                leds[i][j] = cubicwave8(brightnessArray[i][j] - loopIterator);
-            }
-            else {
-                leds[i][j] = 0;
-            }
-
-      }
-    }
-    FastLED.show();
-    if(loopIterator > 0) {
-        loopIterator--;
-    }
-    else {
-        setRandomBrightness();
-        loopIterator = 255;
-    }
-
-    delay(4 * loopDuration);
+ animate(activeLed);
+ setLed(activeLed,random8(1,30));
+ if(activeLed == NUM_LEDS){
+    activeLed = 1;
+ }
+ else {
+    activeLed ++;
+ }
 }
 
-void setRandomBrightness(){
-    for (int i = 0; i < ledNumber; i++) {
-      for (int j = 0; j < channel; j++) {
-         brightnessArray[i][j] = random8(0,255);
-      }
-    }
+void animate(int ledNumber){
+int x = 1;
+  for (int i = 254; i > -1; i = i + x){
+	   if (i == 254){
+			x = -1;
+		  }
+         setLed(ledNumber,i);
+         FastLED.show();
+        // delay(.001);
+   }
+}
+
+void setLed(int realLedNum, int brightness){
+	int ledNum = 0;
+	int colorNum = 0;
+	float tool =  (realLedNum-1) /3;
+    ledNum = int(tool+.5);
+    colorNum = (realLedNum-1) % 3;
+    leds[ledNum][colorNum] = cubicwave8(brightness)-1;
 }
